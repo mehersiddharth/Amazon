@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Data Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        input {
+            width: 400px;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px 12px;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        .pagination {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>AI Data Assistant</h1>
+
+<form method="post">
+    <input type="text" name="text" placeholder="Ask a question..." required>
+    <button type="submit">Run</button>
+</form>
+
+{% if result %}
+
+<h3>Generated SQL</h3>
+<pre>{{ result.query }}</pre>
+
+<h3>Query Result</h3>
+
+{% if result.rows %}
+<table>
+    <thead>
+        <tr>
+            {% for col in result.columns %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in result.rows %}
+        <tr>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No results found.</p>
+{% endif %}
+
+<div class="pagination">
+    {% if result.page > 1 %}
+        <a href="/?question={{ result.question }}&page={{ result.page - 1 }}">◀ Previous</a>
+    {% endif %}
+
+    <span>Page {{ result.page }} of {{ result.total_pages }}</span>
+
+    {% if result.page < result.total_pages %}
+        <a href="/?question={{ result.question }}&page={{ result.page + 1 }}">Next ▶</a>
+    {% endif %}
+</div>
+
+<h3>AI Insight</h3>
+<p>{{ result.answer }}</p>
+
+{% endif %}
+
+</body>
+</html>

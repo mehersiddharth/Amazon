@@ -1,6 +1,6 @@
 # Project Title
 
-**AI-Powered Natural Language to SQL Data Assistant**
+**Natural Language SQL Query Assistant**
 
 ---
 

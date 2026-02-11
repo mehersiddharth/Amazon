@@ -6,15 +6,15 @@ import threading
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
-client = OpenAI(api_key='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')  # Uses OPENAI_API_KEY from env
+client = OpenAI(api_key='')  # Uses OPENAI_API_KEY 
 
 PAGE_SIZE = 25
 db_lock = threading.Lock()  # SERIALIZES SQLITE ACCESS
 
 
-# =====================================================
-# 2. COMPACT SCHEMA (ONLY THIS GOES TO LLM)
-# =====================================================
+
+# COMPACT SCHEMA (ONLY THIS GOES TO LLM)
+
 
 SCHEMA_SUMMARY = """
 category(category_id, category_name)
@@ -28,9 +28,9 @@ shippings(shipping_id, order_id, shipping_date, return_date, delivery_status)
 inventory(inventory_id, product_id, stock, warehouse_id, last_stock_date)
 """
 
-# =====================================================
-# 3. UTILITIES
-# =====================================================
+
+# UTILITIES
+
 
 def clean_sql(sql: str) -> str:
     """Remove trailing semicolons and whitespace (SQLite-safe)."""
@@ -53,9 +53,9 @@ def needs_llm_explanation(question: str) -> bool:
     ]
     return any(k in question.lower() for k in keywords)
 
-# =====================================================
-# 4. LLM → SQL
-# =====================================================
+
+#  LLM → SQL
+
 
 def create_query(question: str) -> str:
     prompt = f"""
@@ -87,9 +87,9 @@ User question:
     sql = json.loads(response.choices[0].message.content)["sql"]
     return clean_sql(sql)
 
-# =====================================================
-# 5. DATABASE ACCESS (SERIALIZED + SAFE)
-# =====================================================
+
+# DATABASE ACCESS (SERIALIZED + SAFE)
+
 
 def get_connection():
     return sqlite3.connect(
@@ -132,37 +132,8 @@ def get_total_rows(query):
 
     return total
 
-# =====================================================
-# 6. SAFE LLM EXPLANATION (SUMMARY ONLY)
-# =====================================================
 
-def interpret_results(question, columns, rows):
-    summary = {
-        "columns": columns,
-        "row_count": len(rows),
-        "sample_rows": rows[:3]
-    }
-
-    prompt = f"""
-User question:
-{question}
-
-Result summary:
-{summary}
-
-Explain briefly in business terms.
-"""
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content
-
-# =====================================================
-# 7. MAIN ORCHESTRATOR
-# =====================================================
+# MAIN ORCHESTRATOR
 
 def get_question_and_return_answer(question, page):
     offset = (page - 1) * PAGE_SIZE
@@ -187,9 +158,9 @@ def get_question_and_return_answer(question, page):
         "question": question
     }
 
-# =====================================================
-# 8. FLASK ROUTE
-# =====================================================
+
+# FLASK ROUTE
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -206,15 +177,12 @@ def index():
 
     return render_template("index.html", result=result)
 
-# =====================================================
-# 9. START SERVER (RELOADER OFF)
-# =====================================================
+
+# START SERVER (RELOADER OFF)
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
 
 
 
-
-## api key --- IGNORE ---
-## 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
